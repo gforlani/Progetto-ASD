@@ -2,12 +2,14 @@
 #include <vector>
 #include <unordered_map>
 #include <utility>
+#include <algorithm>
 
 using namespace std;
 
 struct Arco{
     int destinazione;
-    Arco(int d) : destinazione(d) {}
+    int peso;
+    Arco(int d, int p) : destinazione(d), peso(p) {}
 };
 
 struct Nodo{
@@ -57,38 +59,84 @@ public:
 
     if(it != frequenze.end()){
         it->second++;
-        return;
+        for (auto& arco : adj[u]) { 
+            if (arco.destinazione == v) { 
+                arco.peso = it->second; 
+                break; 
+            } 
+        }
+        for (auto& arco : adj[v]) { 
+            if (arco.destinazione == u) { 
+                arco.peso = it->second; 
+                break; 
+            } 
+        }
     }
-
+    else{
     frequenze[key] = 1;
     adj[u].push_back(Arco(v));
     adj[v].push_back(Arco(u));
+    }
+
+    
 }
 
     const vector<Arco>& Vicini(int AS) const{
 
-    int indice = idToIndex.at(AS);
-
-    return adj[indice];
-}
-
-    int Frequenza(int AS1, int AS2) const{
-
-    int u = idToIndex.at(AS1);
-    int v = idToIndex.at(AS2);
-
-    long long key = ChiaveArco(u,v);
-
-    auto it = frequenze.find(key);
-
-    if(it == frequenze.end())
-        return 0;
-
-    return it->second;
+    return adj[idToIndex.at(AS)];
 }
     int NumeroNodi() const{
 
     return nodi.size();
+}
+
+bool DFS(int corr, int destinazione, int soglia, vector<bool>& visitato){
+    if(corr == destinazione) return true;
+    visitato[corr] = true;
+    for(const Arco& arco : adj[corr]){
+        if(visitato[arco.destinazione]) continue;
+        if(arco.peso > soglia) continue;
+        if(DFS(arco.destinazione, destinazione, soglia, visitato)) return true;
+    }
+    return false;
+}
+
+bool EsisteCammino(int AS1, int AS2, int soglia){
+    vector<bool> visitato(nodi.size(), false);
+    int sorgente = idToIndex.at(AS1);
+    int destinazione = idToIndex.at(AS2);
+
+    return DFS(sorgente, destinazione, soglia, visitato);
+}
+
+vector<int> PesiDistinti() const{
+    vector<int> pesi;
+    for(const auto&coppia : frequenze){
+        pesi.push_back(coppia.second);
+    }
+    if(pesi.empty()) return pesi;
+    sort(pesi.begin(), pesi.end());
+    pesi.erase(unique(pesi.begin(), pesi.end()), pesi.end());
+    return pesi;
+}
+
+int CostoMinimax(int AS1, int AS2){
+    vector<int> pesi = PesiDistinti();
+    int left = 0;
+    int right = pesi.size() - 1;
+    int risposta = -1;
+    while(left <= right){
+        int mid = left + (right-left)/2;
+        int soglia = pesi[mid];
+        if(EsisteCammino(AS1, AS2, soglia)){
+            risposta = soglia;
+            right = mid - 1;
+        }
+        else{
+            left = mid + 1;
+        }
+    }
+    return risposta;
 }
 
 };
