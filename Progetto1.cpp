@@ -92,6 +92,7 @@ public:
         for (auto& arco : adj[u]) { 
             if (arco.destinazione == v) { 
                 arco.peso++; 
+                trovato = true;
                 break; 
             } 
         }
@@ -237,6 +238,27 @@ public:
                 mst[v].push_back(Arco(u, w));
             }
         }
+        long long minimo = 1e18;
+long long massimo = 0;
+
+for(const auto& lista : mst)
+{
+    for(const auto& arco : lista)
+    {
+        minimo = min(minimo, (long long)arco.peso);
+        massimo = max(massimo, (long long)arco.peso);
+    }
+}
+
+cout
+    << "Peso minimo MST = "
+    << minimo
+    << endl;
+
+cout
+    << "Peso massimo MST = "
+    << massimo
+    << endl;
     }
 
     void DFSBuild(int u, int parent, int peso){
